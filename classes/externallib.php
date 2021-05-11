@@ -76,7 +76,7 @@ class external extends \external_api {
         $data = (object)['q' => $search, 'courseids' => [$courseid]];
 
         if (!empty($resourcetype)) {
-            $data->areaids = [$resourcetype];
+            $data->areaids = explode(',', $resourcetype);
         }
 
         if (!empty($userid)) {
