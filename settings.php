@@ -33,11 +33,13 @@ if ($hassiteconfig) {
     // Get site glossaries.
     $glossaries = $DB->get_records_menu('glossary', ['course' => SITEID, 'displayformat' => 'faq'], 'name', 'id, name');
 
-    // Glossaries to FAQ answers.
-    $name = 'local_searchingnav/faqids';
-    $title = get_string('faqids', 'local_searchingnav');
-    $help = get_string('faqids_help', 'local_searchingnav');
-    $setting = new admin_setting_configmultiselect($name, $title, $help, [], $glossaries);
-    $settings->add($setting);
+    if ($glossaries) {
+        // Glossaries to FAQ answers.
+        $name = 'local_searchingnav/faqids';
+        $title = get_string('faqids', 'local_searchingnav');
+        $help = get_string('faqids_help', 'local_searchingnav');
+        $setting = new admin_setting_configmultiselect($name, $title, $help, [], $glossaries);
+        $settings->add($setting);
+    }
 
 }
