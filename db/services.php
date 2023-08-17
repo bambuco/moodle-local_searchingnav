@@ -24,23 +24,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$functions = array(
-    'local_searchingnav_get_search' => array(
+$functions = [
+    'local_searchingnav_get_search' => [
         'classname' => '\local_searchingnav\external',
         'methodname' => 'get_search',
         'classpath' => 'local/searchingnav/classes/externallib.php',
         'description' => 'Get resources according a searching text',
         'type' => 'read',
         'capabilities' => 'local/searchingnav:view'
-    )
-);
-
-$services = array(
-        'Searching nav plugin webservices' => array(
-                'functions' => array ('local_searchingnav_get_search'),
-                'restrictedusers' => 1, // if 1, the administrator must manually select which user can use this service.
-                // (Administration > Plugins > Web services > Manage services > Authorised users)
-                'enabled' => 0, // if 0, then token linked to this service won't work
-                'shortname' => 'local_searchingnav_ws'
-        )
-);
+    ],
+    'local_searchingnav_faq' => [
+        'classname' => '\local_searchingnav\external',
+        'methodname' => 'faq',
+        'classpath' => 'local/searchingnav/classes/externallib.php',
+        'description' => 'Get the answer to a FAQ',
+        'type' => 'read',
+        'capabilities' => 'local/searchingnav:view'
+    ]
+];

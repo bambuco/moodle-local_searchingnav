@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,5 +25,9 @@
 
 $string['pluginname'] = 'Searching nav plugin';
 
-// For Capabilities
+// For Capabilities.
 $string['searchingnav:view'] = "Get information for WS searchingnav";
+
+$string['faqids'] = 'FAQs glossaries';
+$string['faqids_help'] = 'Select the glossaries that will be used as FAQs.';
+$string['general'] = 'General';

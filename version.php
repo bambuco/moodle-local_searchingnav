@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2021050701;  // The current module version (Date: YYYYMMDDXX)
-$plugin->requires = 2019111806;  // Requires this Moodle version (moodle 2.9.x)
+$plugin->version  = 2023081600.01;
+$plugin->requires = 2022112804; // 4.1+ Moodle version.
 $plugin->component = 'local_searchingnav';
-$plugin->dependencies = array();
-$plugin->release  = '0.0.1';       // Human-friendly version name.
-//MATURITY_ALPHA, MATURITY_BETA, MATURITY_RC, MATURITY_STABLE
+$plugin->dependencies = [];
+$plugin->release  = '0.1.0';
+// One of: MATURITY_ALPHA, MATURITY_BETA, MATURITY_RC, MATURITY_STABLE.
 $plugin->maturity = MATURITY_ALPHA;

@@ -31,7 +31,6 @@ defined('MOODLE_INTERNAL') || die();
 require_once $CFG->libdir . '/externallib.php';
 require_once $CFG->dirroot . '/local/searchingnav/locallib.php';
 
-
 /**
  * External WS lib.
  *
@@ -46,24 +45,23 @@ class external extends \external_api {
      */
     public static function get_search_parameters() {
         return new \external_function_parameters(
-              array(
-                  'courseid'        => new \external_value(PARAM_INT, 'Course id to search in', VALUE_REQUIRED),
-                  'search'            => new \external_value(PARAM_TEXT, 'Text to search', VALUE_DEFAULT, ''),
-                  'resourcetype'    => new \external_value(PARAM_TEXT, 'Resource type (mod basic name)', VALUE_DEFAULT, ''),
-                  'userid'          => new \external_value(PARAM_INT, 'Filter by user id', VALUE_DEFAULT, 0),
-               )
+                [
+                    'courseid'        => new \external_value(PARAM_INT, 'Course id to search in', VALUE_REQUIRED),
+                    'search'          => new \external_value(PARAM_TEXT, 'Text to search', VALUE_DEFAULT, ''),
+                    'resourcetype'    => new \external_value(PARAM_TEXT, 'Resource type (mod basic name)', VALUE_DEFAULT, ''),
+                    'userid'          => new \external_value(PARAM_INT, 'Filter by user id', VALUE_DEFAULT, 0),
+                ]
         );
     }
 
-
     public static function get_search($courseid, $search, $resourcetype, $userid) {
-        global $DB, $USER, $CFG;
+        global $DB, $CFG;
 
-        $found = array();
+        $found = [];
         $responselog = new \stdClass();
         $responselog->length = 0;
 
-        $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
 
         $indexingenabled = \core_search\manager::is_indexing_enabled();
 
@@ -120,14 +118,109 @@ class external extends \external_api {
     public static function get_search_returns() {
         return new \external_multiple_structure(
                     new \external_single_structure(
-                        array(
+                        [
                             'name'      => new \external_value(PARAM_TEXT, 'Resource name'),
                             'url'       => new \external_value(PARAM_TEXT, 'Url to resource'),
                             'type'      => new \external_value(PARAM_TEXT, 'Resource type'),
-                        ), 'Resource found information'
+                        ], 'Resource found information'
                     ), 'List of found resources'
             );
     }
 
+    /**
+     * To validade input parameters
+     * @return external_function_parameters
+     */
+    public static function faq_parameters() {
+        return new \external_function_parameters(
+            [
+                'q' => new \external_value(PARAM_TEXT, 'General question', VALUE_DEFAULT, ''),
+                'keywords' => new \external_multiple_structure(
+                        new \external_value(PARAM_TEXT, 'Concepts list', VALUE_DEFAULT, ''),
+                        'List of concepts', VALUE_DEFAULT, []
+                )
+            ]
+        );
+    }
+
+    public static function faq($q, $keywords) : array {
+        global $DB;
+
+        $found = [];
+        $glossariesids = get_config('local_searchingnav', 'faqids');
+
+        if (empty($glossariesids)) {
+            return $found;
+        }
+
+        $glossaries = $DB->get_records_list('glossary', 'id', explode(',', $glossariesids));
+
+        if (empty($glossaries)) {
+            return $found;
+        }
+
+        $availableglossariesids = implode(',', array_keys($glossaries));
+
+        $concepts = [];
+        $q = trim($q);
+        if (!empty($q)) {
+            $searchsql = $DB->sql_like('concept', ':concept');
+            $searchparam = '%' . $DB->sql_like_escape($q) . '%';
+
+            $sql = "SELECT * FROM {glossary_entries} WHERE glossaryid IN ({$availableglossariesids}) AND {$searchsql}";
+            $concepts = $DB->get_records_sql($sql, ['concept' => $searchparam]);
+        }
+
+        if (!empty($keywords)) {
+
+            // Clean the keywords.
+            $keywords = array_map('trim', $keywords);
+            $keywords = array_filter($keywords);
+
+            if (!empty($keywords)) {
+
+                $keywords = array_unique($keywords);
+
+                list($where, $params) = $DB->get_in_or_equal($keywords);
+
+                $sql = "SELECT DISTINCT ge.* FROM {glossary_alias} ga
+                        INNER JOIN {glossary_entries} ge ON ge.id = ga.entryid
+                        WHERE ge.glossaryid IN ({$availableglossariesids}) AND ga.alias $where";
+                $conceptsbykeywords = $DB->get_records_sql($sql, $params);
+
+                if (!empty($conceptsbykeywords)) {
+                    $concepts = (!empty($concepts)) ? array_merge($concepts, $conceptsbykeywords) : $conceptsbykeywords;
+                }
+            }
+        }
+
+        if (!empty($concepts)) {
+            foreach ($concepts as $concept) {
+                $found[] = [
+                    'concept' => $concept->concept,
+                    'definition' => $concept->definition,
+                    'definitiontext' => strip_tags($concept->definition)
+                ];
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Validate the return value
+     * @return external_multiple_structure
+     */
+    public static function faq_returns() {
+        return new \external_multiple_structure(
+            new \external_single_structure(
+                [
+                    'concept' => new \external_value(PARAM_TEXT, 'Entry concept'),
+                    'definition' => new \external_value(PARAM_RAW, 'Entry content'),
+                    'definitiontext' => new \external_value(PARAM_TEXT, 'Entry content in plain text')
+                ], 'Matching concept'
+            ), 'List of matching concepts'
+        );
+    }
 
 }
