@@ -167,7 +167,9 @@ class external extends \external_api {
             $searchsql = $DB->sql_like('concept', ':concept');
             $searchparam = '%' . $DB->sql_like_escape($q) . '%';
 
-            $sql = "SELECT * FROM {glossary_entries} WHERE glossaryid IN ({$availableglossariesids}) AND {$searchsql}";
+            $sql = "SELECT * FROM {glossary_entries}
+                        WHERE glossaryid IN ({$availableglossariesids}) AND {$searchsql}
+                        ORDER BY concept ASC";
             $concepts = $DB->get_records_sql($sql, ['concept' => $searchparam]);
         }
 
@@ -185,7 +187,8 @@ class external extends \external_api {
 
                 $sql = "SELECT DISTINCT ge.* FROM {glossary_alias} ga
                         INNER JOIN {glossary_entries} ge ON ge.id = ga.entryid
-                        WHERE ge.glossaryid IN ({$availableglossariesids}) AND ga.alias $where";
+                        WHERE ge.glossaryid IN ({$availableglossariesids}) AND ga.alias $where
+                        ORDER BY ge.concept ASC";
                 $conceptsbykeywords = $DB->get_records_sql($sql, $params);
 
                 if (!empty($conceptsbykeywords)) {
