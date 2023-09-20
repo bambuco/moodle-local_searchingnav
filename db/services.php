@@ -40,5 +40,13 @@ $functions = [
         'description' => 'Get the answer to a FAQ',
         'type' => 'read',
         'capabilities' => 'local/searchingnav:view'
+    ],
+    'local_searchingnav_identity' => [
+        'classname' => '\local_searchingnav\external',
+        'methodname' => 'identity',
+        'classpath' => 'local/searchingnav/classes/externallib.php',
+        'description' => 'Search for a identity',
+        'type' => 'read',
+        'capabilities' => 'local/searchingnav:view'
     ]
 ];

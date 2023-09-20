@@ -226,4 +226,77 @@ class external extends \external_api {
         );
     }
 
+    /**
+     * To validade input parameters
+     * @return external_function_parameters
+     */
+    public static function identity_parameters() {
+        return new \external_function_parameters(
+            [
+                'field' => new \external_value(PARAM_TEXT, 'Field to check the identity', VALUE_REQUIRED),
+                'value' => new \external_value(PARAM_TEXT, 'Identity value', VALUE_DEFAULT, ''),
+            ]
+        );
+    }
+
+    public static function identity($field, $value) : ?object {
+        global $DB;
+
+        $response = new \stdClass();
+
+        $validfields = ['phone'];
+
+        $field = trim($field);
+        if (!in_array($field, $validfields)) {
+            throw new \moodle_exception('fieldnoavailable', 'local_searchingnav', '', $field);
+        }
+
+        $value = trim($value);
+        if (empty($value)) {
+            throw new \moodle_exception('erroremptyvalue', 'local_searchingnav', '', $field);
+        }
+
+        $params = [];
+
+        $sql = "SELECT * FROM {user} WHERE deleted = 0 AND suspended = 0";
+        if ($field == 'phone') {
+            $value = ltrim($value, '+');
+
+            $sql .= " AND (REPLACE(REPLACE(REPLACE(REPLACE(phone1, '(', ''),')', ''),' ', ''), '+', '') = :phone1 OR
+            REPLACE(REPLACE(REPLACE(REPLACE(phone2, '(', ''),')', ''),' ', ''), '+', '') = :phone2)";
+
+            $params['phone1'] = $value;
+            $params['phone2'] = $value;
+        }
+
+        $user = $DB->get_records_sql($sql, $params);
+
+        if (empty($user)) {
+            return $response;
+        }
+
+        if (count($user) > 1) {
+            throw new \moodle_exception('morethanoneuserfound', 'local_searchingnav', '', $value);
+        }
+
+        $user = reset($user);
+
+        $response->id = $user->id;
+        $response->fullname = fullname($user);
+
+        return $response;
+    }
+
+    /**
+     * Validate the return value
+     * @return external_multiple_structure
+     */
+    public static function identity_returns() {
+        return new \external_single_structure(
+            [
+                'id' => new \external_value(PARAM_INT, 'Identity id', VALUE_DEFAULT, null),
+                'fullname' => new \external_value(PARAM_TEXT, 'Identity fullname', VALUE_DEFAULT, null)
+            ], 'Found identity', VALUE_DEFAULT, null
+        );
+    }
 }

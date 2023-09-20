@@ -28,6 +28,9 @@ $string['pluginname'] = 'Searching nav plugin';
 // For Capabilities.
 $string['searchingnav:view'] = "Get information for WS searchingnav";
 
+$string['erroremptyvalue'] = 'Empty value is not allowed';
 $string['faqids'] = 'FAQs glossaries';
 $string['faqids_help'] = 'Select the glossaries that will be used as FAQs.';
+$string['fieldnoavailable'] = 'Field no available';
 $string['general'] = 'General';
+$string['morethanoneuserfound'] = 'More than one identity found';

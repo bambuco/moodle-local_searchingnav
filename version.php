@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2023081600.01;
+$plugin->version  = 2023081600.02;
 $plugin->requires = 2022112804; // 4.1+ Moodle version.
 $plugin->component = 'local_searchingnav';
 $plugin->dependencies = [];
