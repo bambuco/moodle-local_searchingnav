@@ -18,8 +18,7 @@
 /**
  * "Searching nav" external functions and service definitions.
  *
- * @package    local
- * @subpackage searchingnav
+ * @package    local_searchingnav
  * @copyright  2021 David Herney @ BambuCo
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -48,5 +47,13 @@ $functions = [
         'description' => 'Search for a identity',
         'type' => 'read',
         'capabilities' => 'local/searchingnav:view'
+    ],
+    'local_searchingnav_changepasswordlink' => [
+        'classname' => '\local_searchingnav\external\changepasswordlink',
+        'classpath' => '',
+        'description' => 'Get a link for a user to change the password.',
+        'type' => 'write',
+        'capabilities' => 'moodle/user:editprofile'
     ]
+
 ];

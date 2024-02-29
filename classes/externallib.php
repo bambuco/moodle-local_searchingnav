@@ -46,7 +46,7 @@ class external extends \external_api {
     public static function get_search_parameters() {
         return new \external_function_parameters(
                 [
-                    'courseid'        => new \external_value(PARAM_INT, 'Course id to search in', VALUE_REQUIRED),
+                    'courseid'        => new \external_value(PARAM_INT, 'Course id to search in', VALUE_DEFAULT, 0),
                     'search'          => new \external_value(PARAM_TEXT, 'Text to search', VALUE_DEFAULT, ''),
                     'resourcetype'    => new \external_value(PARAM_TEXT, 'Resource type (mod basic name)', VALUE_DEFAULT, ''),
                     'userid'          => new \external_value(PARAM_INT, 'Filter by user id', VALUE_DEFAULT, 0),
@@ -61,7 +61,7 @@ class external extends \external_api {
         $responselog = new \stdClass();
         $responselog->length = 0;
 
-        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+        $course = $DB->get_record('course', ['id' => $courseid]);
 
         $indexingenabled = \core_search\manager::is_indexing_enabled();
 
@@ -71,7 +71,11 @@ class external extends \external_api {
 
         $searchmanager = \core_search\manager::instance();
 
-        $data = (object)['q' => $search, 'courseids' => [$courseid]];
+        $data = (object)['q' => $search];
+
+        if ($course) {
+            $data->courseids = [$course->id];
+        }
 
         if (!empty($resourcetype)) {
             $data->areaids = explode(',', $resourcetype);
@@ -79,7 +83,12 @@ class external extends \external_api {
 
         if (!empty($userid)) {
             $data->userids = [$userid];
+        } else {
+            $data->userids = [$CFG->siteguest];
         }
+
+        //ToDo: Hay que hacer que tome bien el contexto. Un invitado no debería de obtener todos los datos.
+        die('//ToDo: Hay que hacer que tome bien el contexto. Un invitado no debería de obtener todos los datos.');
 
         $results = $searchmanager->search($data);
         $responselog->length = count($results);

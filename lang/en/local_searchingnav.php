@@ -33,4 +33,5 @@ $string['faqids'] = 'FAQs glossaries';
 $string['faqids_help'] = 'Select the glossaries that will be used as FAQs.';
 $string['fieldnoavailable'] = 'Field no available';
 $string['general'] = 'General';
+$string['invalidusertochangepassword'] = 'Invalid user to change password';
 $string['morethanoneuserfound'] = 'More than one identity found';
