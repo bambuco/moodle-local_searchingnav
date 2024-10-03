@@ -23,11 +23,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Searching nav plugin';
-
-// For Capabilities.
-$string['searchingnav:view'] = "Get information for WS searchingnav";
-
 $string['erroremptyvalue'] = 'Empty value is not allowed';
 $string['faqids'] = 'FAQs glossaries';
 $string['faqids_help'] = 'Select the glossaries that will be used as FAQs.';
@@ -35,3 +30,7 @@ $string['fieldnoavailable'] = 'Field no available';
 $string['general'] = 'General';
 $string['invalidusertochangepassword'] = 'Invalid user to change password';
 $string['morethanoneuserfound'] = 'More than one identity found';
+$string['nopermissionothers'] = 'You do not have permission to view information from other users';
+$string['pluginname'] = 'Searching nav plugin';
+$string['searchingnav:view'] = "Get information for WS searchingnav";
+$string['searchingnav:viewothers'] = "Get information of other users using WS searchingnav";

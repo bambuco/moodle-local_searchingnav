@@ -18,12 +18,17 @@
 // Capability definitions for the Searching nav local module
 //
 
-$capabilities = array(
+$capabilities = [
 
-    'local/searchingnav:view' => array(
+    'local/searchingnav:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-        )
-    ),
-);
+        'archetypes' => [],
+    ],
+
+    'local/searchingnav:viewothers' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [],
+    ],
+];

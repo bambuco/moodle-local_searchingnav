@@ -55,13 +55,26 @@ class external extends \external_api {
     }
 
     public static function get_search($courseid, $search, $resourcetype, $userid) {
-        global $DB, $CFG;
+        global $DB, $CFG, $USER;
 
         $found = [];
         $responselog = new \stdClass();
         $responselog->length = 0;
 
-        $course = $DB->get_record('course', ['id' => $courseid]);
+        $context = \context_system::instance();
+        if (!has_capability('local/searchingnav:viewothers', $context)) {
+            throw new \moodle_exception('nopermissionothers', 'local_searchingnav');
+        }
+
+        if (empty($search) && empty($resourcetype)) {
+            return $found;
+        }
+
+        if (!empty($courseid)) {
+            $course = $DB->get_record('course', ['id' => $courseid]);
+        } else {
+            $course = null;
+        }
 
         $indexingenabled = \core_search\manager::is_indexing_enabled();
 
@@ -78,19 +91,49 @@ class external extends \external_api {
         }
 
         if (!empty($resourcetype)) {
-            $data->areaids = explode(',', $resourcetype);
+            $data->areaids = [];
+            $areaids = explode(',', $resourcetype);
+            $areaids = array_map('trim', $areaids);
+            $enabledsearchareas = \core_search\manager::get_search_areas_list(true);
+            foreach ($enabledsearchareas as $area) {
+                $componentname = $area->get_component_name();
+
+                if (in_array($componentname, $areaids)) {
+                    $data->areaids[] = $area->get_area_id();
+                } else if (in_array($area->get_area_id(), $areaids)) {
+                    // In case the area name is passed instead of the component name.
+                    $data->areaids[] = $area->get_area_id();
+                }
+            }
         }
 
+        // The logic for "$data->userids" is included but was not found to be implemented in the core code.
         if (!empty($userid)) {
             $data->userids = [$userid];
         } else {
             $data->userids = [$CFG->siteguest];
+            $data->context = $context;
+            $data->courseids = 0;
+            $userid = $CFG->siteguest;
         }
 
-        //ToDo: Hay que hacer que tome bien el contexto. Un invitado no debería de obtener todos los datos.
-        die('//ToDo: Hay que hacer que tome bien el contexto. Un invitado no debería de obtener todos los datos.');
+        // ToDo: A horrible hack to replace the unimplemented "userids" parameter.
+        // A temporary impersonation of the user is needed because the Search API does
+        // not take into account the user being filtered with.
+        $tmpuser = null;
+        if ($userid != $USER->id) {
+            $user = $DB->get_record('user', ['id' => $userid]);
+            $tmpuser = clone($USER);
+            $USER = $user;
+        }
 
         $results = $searchmanager->search($data);
+
+        // Restore the original user.
+        if ($tmpuser) {
+            $USER = $tmpuser;
+        }
+
         $responselog->length = count($results);
 
         foreach ($results as $result) {
@@ -99,7 +142,10 @@ class external extends \external_api {
             $resource = new \stdClass();
             $resource->name = ($title !== '') ? $title : get_string('notitle', 'search');
             $resource->url = (string)$result->get_doc_url();
-            $resource->type = $result->get('areaid');
+            $parts = \core_search\manager::extract_areaid_parts($result->get('areaid'));
+            $resource->type = $parts[0];
+            $resource->subtype = count($parts) > 1 ? $parts[1] : '';
+
             $found[] = $resource;
         }
 
@@ -131,6 +177,7 @@ class external extends \external_api {
                             'name'      => new \external_value(PARAM_TEXT, 'Resource name'),
                             'url'       => new \external_value(PARAM_TEXT, 'Url to resource'),
                             'type'      => new \external_value(PARAM_TEXT, 'Resource type'),
+                            'subtype'   => new \external_value(PARAM_TEXT, 'Resource subtype'),
                         ], 'Resource found information'
                     ), 'List of found resources'
             );
