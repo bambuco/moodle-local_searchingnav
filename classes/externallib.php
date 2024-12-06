@@ -50,11 +50,13 @@ class external extends \external_api {
                     'search'          => new \external_value(PARAM_TEXT, 'Text to search', VALUE_DEFAULT, ''),
                     'resourcetype'    => new \external_value(PARAM_TEXT, 'Resource type (mod basic name)', VALUE_DEFAULT, ''),
                     'userid'          => new \external_value(PARAM_INT, 'Filter by user id', VALUE_DEFAULT, 0),
+                    'startdate'       => new \external_value(PARAM_INT, 'Start date to search', VALUE_DEFAULT, 0),
+                    'enddate'         => new \external_value(PARAM_INT, 'End date to search', VALUE_DEFAULT, 0),
                 ]
         );
     }
 
-    public static function get_search($courseid, $search, $resourcetype, $userid) {
+    public static function get_search($courseid, $search, $resourcetype, $userid, $startdate, $enddate) : array {
         global $DB, $CFG, $USER;
 
         $found = [];
@@ -137,6 +139,14 @@ class external extends \external_api {
         $responselog->length = count($results);
 
         foreach ($results as $result) {
+
+            if ($startdate > 0 || $enddate > 0) {
+                $indates = \local_searchingnav\local\controller::check_resourcebetweendates($result, $startdate, $enddate);
+                if (!$indates) {
+                    continue;
+                }
+            }
+
             $title = $result->get('title');
 
             $resource = new \stdClass();
