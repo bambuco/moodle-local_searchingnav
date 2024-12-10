@@ -100,6 +100,14 @@ class external extends \external_api {
             foreach ($enabledsearchareas as $area) {
                 $componentname = $area->get_component_name();
 
+                // A special case when all activities are requested.
+                if ($resourcetype == 'mod'
+                        && strpos($componentname, 'mod_') === 0
+                        && in_array($componentname, \local_searchingnav\local\controller::ACTIVITIES)) {
+                    $data->areaids[] = $area->get_area_id();
+                    continue;
+                }
+
                 if (in_array($componentname, $areaids)) {
                     $data->areaids[] = $area->get_area_id();
                 } else if (in_array($area->get_area_id(), $areaids)) {

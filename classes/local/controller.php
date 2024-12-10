@@ -16,6 +16,8 @@
 
 namespace local_searchingnav\local;
 
+use block_completion_progress\defaults;
+
 /**
  * Class controller
  *
@@ -25,6 +27,22 @@ namespace local_searchingnav\local;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class controller {
+
+    /**
+     * List of modules that are considered activities.
+     *
+     * @return array
+     */
+    public const ACTIVITIES = [
+        'mod_assign',
+        'mod_data',
+        'mod_feedback',
+        'mod_forum',
+        'mod_lesson',
+        'mod_quiz',
+        'mod_scorm',
+        'mod_workshop'
+    ];
 
     /**
      * Check if the resource is between the dates
@@ -39,47 +57,71 @@ class controller {
 
         $info = explode("-", $resource->get('areaid'));
 
-        switch ($info[0]) {
-            case 'mod_assign':
-                $cm = get_coursemodule_from_instance('assign', $resource->get('itemid'));
-                $context = \context_module::instance($cm->id);
-                $instance = new \assign($context, $cm, $resource->get('courseid'));
-                if (empty($instance->duedate)) {
-                    return true;
-                }
-                return $instance->duedate >= $startdate && $instance->duedate <= $enddate;
-            case 'mod_quiz':
-                $cm = get_coursemodule_from_instance('quiz', $resource->get('itemid'));
-                $context = \context_module::instance($cm->id);
-                $instance = new \quiz($context, $cm, $resource->get('courseid'));
-                if (empty($instance->timeclose)) {
-                    return true;
-                }
-                return $instance->timeclose >= $startdate && $instance->timeclose <= $enddate;
-            case 'mod_scorm':
-                $scorm = $DB->get_record('scorm', ['id' => $resource->get('itemid')]);
-                if (empty($scorm->timeclose) && empty($scorm->timeopen)) {
-                    return true;
-                }
-
-                if (empty($scorm->timeclose)) {
-                    return $scorm->timeopen >= $startdate && $scorm->timeopen <= $enddate;
-                }
-
-                return $scorm->timeclose >= $startdate && $scorm->timeclose <= $enddate;
-            case 'mod_data':
-                $instance = $DB->get_record('data', ['id' => $resource->get('itemid')]);
-                if (empty($instance->timeavailablefrom) && empty($instance->timeavailableto)) {
-                    return true;
-                }
-
-                if (empty($instance->timeavailablefrom)) {
-                    return $instance->timeavailableto >= $startdate && $instance->timeavailableto <= $enddate;
-                }
-
-                return $instance->timeavailablefrom >= $startdate && $instance->timeavailablefrom <= $enddate;
+        // If the resource is not an activity, it is understood that it is always available.
+        if (!in_array($info[0], self::ACTIVITIES)) {
+            return true;
         }
 
-        return true;
+        $opendate = 0;
+        $closedate = 0;
+        switch ($info[0]) {
+            case 'mod_assign':
+                $instance = $DB->get_record('assign', ['id' => $resource->get('itemid')]);
+                $closedate = $instance->duedate;
+            break;
+            case 'mod_data':
+                $instance = $DB->get_record('data', ['id' => $resource->get('itemid')]);
+                $opendate = $instance->timeavailablefrom;
+                $closedate = $instance->timeavailableto;
+            break;
+            case 'mod_feedback':
+                $instance = $DB->get_record('feedback', ['id' => $resource->get('itemid')]);
+                $opendate = $instance->timeopen;
+                $closedate = $instance->timeclose;
+            break;
+            case 'mod_forum':
+                $instance = $DB->get_record('forum', ['id' => $resource->get('itemid')]);
+                $closedate = $instance->duedate;
+            break;
+            case 'mod_lesson':
+                $instance = $DB->get_record('lesson', ['id' => $resource->get('itemid')]);
+                $opendate = $instance->available;
+                $closedate = $instance->deadline;
+            break;
+            case 'mod_quiz':
+                $instance = $DB->get_record('quiz', ['id' => $resource->get('itemid')]);
+                $closedate = $instance->timeclose;
+            break;
+            case 'mod_scorm':
+                $instance = $DB->get_record('scorm', ['id' => $resource->get('itemid')]);
+                $opendate = $instance->timeopen;
+                $closedate = $instance->timeclose;
+            break;
+            case 'mod_workshop':
+                $instance = $DB->get_record('workshop', ['id' => $resource->get('itemid')]);
+                $opendate = $instance->submissionstart;
+                $closedate = $instance->submissionend;
+            break;
+        }
+
+        $opendate = (int) $opendate;
+        $closedate = (int) $closedate;
+
+        if ($opendate == 0 && $closedate == 0) {
+            return true;
+        }
+
+        $closedate = $closedate == 0 ? PHP_INT_MAX : $closedate;
+
+        if ($startdate == 0 || $enddate == 0 || $startdate == $enddate) {
+
+            // If only one of the dates is specified or if both dates are the same,
+            // it is understood that these are the activities available at that specific time.
+            $checkdate = $startdate == $enddate ? $startdate : ($startdate + $enddate);
+            return $checkdate <= $closedate && $checkdate >= $opendate;
+        }
+
+        return $opendate <= $enddate && $closedate >= $startdate;
+
     }
 }
