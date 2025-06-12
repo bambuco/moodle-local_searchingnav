@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2023081600.06;
+$plugin->version  = 2023081602;
 $plugin->requires = 2022112804; // 4.1+ Moodle version.
 $plugin->component = 'local_searchingnav';
 $plugin->dependencies = [];
-$plugin->release  = '0.1.0';
+$plugin->release  = '0.1.1';
 // One of: MATURITY_ALPHA, MATURITY_BETA, MATURITY_RC, MATURITY_STABLE.
 $plugin->maturity = MATURITY_ALPHA;
