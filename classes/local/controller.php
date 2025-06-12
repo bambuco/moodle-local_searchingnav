@@ -41,7 +41,7 @@ class controller {
         'mod_lesson',
         'mod_quiz',
         'mod_scorm',
-        'mod_workshop'
+        'mod_workshop',
     ];
 
     /**
